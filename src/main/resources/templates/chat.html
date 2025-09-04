@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Real time chat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+        #chat-window {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background: #f8f9fa;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4">
+    <h1 class="mb-4">Real time chat</h1>
+    <div class="mb-3">
+        <span id="user-label" class="fw-bold"></span>
+        <button class="btn btn-link" id="logout-btn">Logout</button>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <h5>Users</h5>
+            <ul id="user-list" class="list-group mb-3"></ul>
+        </div>
+        <div class="col-md-9">
+            <div id="chat-window"></div>
+            <form id="chat-form" class="row g-2">
+                <div class="col-md-10">
+                    <input type="text" id="content" class="form-control" placeholder="Type your message..." required>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button type="submit" id="sendMessage" class="btn btn-primary">Send</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    let stompClient = null;
+    let username = localStorage.getItem('chatUsername');
+    let selectedRecipient = null;
+    let currentRoomSubscription = null;
+    let currentRoomId = null;
+    let chatHistory = {};
+
+    if (!username) {
+        window.location.href = '/login';
+    }
+    document.getElementById('user-label').textContent = 'Logged in as: ' + username;
+    document.getElementById('logout-btn').onclick = function() {
+        localStorage.removeItem('chatUsername');
+        window.location.href = '/login';
+    };
+
+    function showMessage(message) {
+        const chatWindow = document.getElementById('chat-window');
+        const roomKey = message.chatRoomId;
+        if (!chatHistory[roomKey]) chatHistory[roomKey] = [];
+        chatHistory[roomKey].push(message);
+        if (roomKey === currentRoomId) {
+            renderChatWindow(roomKey);
+        }
+    }
+
+    function renderChatWindow(roomKey) {
+        const chatWindow = document.getElementById('chat-window');
+        chatWindow.innerHTML = '';
+        (chatHistory[roomKey] || []).forEach(message => {
+            let recipientInfo = message.recipient ? `<span class='text-muted'>(to ${message.recipient})</span> ` : '';
+            const messageElement = document.createElement('div');
+            messageElement.innerHTML = `<strong>${message.sender}:</strong> ${recipientInfo}${message.content}`;
+            messageElement.className = 'mb-2';
+            chatWindow.appendChild(messageElement);
+        });
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function subscribeToRoom(recipient) {
+        if (currentRoomSubscription) {
+            currentRoomSubscription.unsubscribe();
+        }
+        // Fetch chatRoomId from backend
+        fetch(`/api/room/${username}/${recipient}`)
+            .then(response => response.text())
+            .then(chatRoomId => {
+                currentRoomId = chatRoomId;
+                // Fetch and render history
+                fetch(`/api/room/${chatRoomId}/history`)
+                    .then(response => response.json())
+                    .then(messages => {
+                        chatHistory[chatRoomId] = messages;
+                        renderChatWindow(chatRoomId);
+                    });
+                // Subscribe to room
+                currentRoomSubscription = stompClient.subscribe(
+                    `/user/queue/room/${chatRoomId}`,
+                    function (message) {
+                        showMessage(JSON.parse(message.body));
+                    }
+                );
+            });
+    }
+
+    function sendMessage(event) {
+        event.preventDefault();
+        const messageContent = document.getElementById('content').value;
+        if (username && selectedRecipient && messageContent && stompClient && stompClient.connected && currentRoomId) {
+            const message = {
+                sender: username,
+                recipient: selectedRecipient,
+                content: messageContent,
+                chatRoomId: currentRoomId
+            };
+            stompClient.send("/app/sendMessage", {}, JSON.stringify(message));
+            document.getElementById('content').value = '';
+        }
+    }
+
+    function setConnected(connected) {
+        document.getElementById('sendMessage').disabled = !connected;
+    }
+
+    function updateUserList(users) {
+        const userList = document.getElementById('user-list');
+        userList.innerHTML = '';
+        users.forEach(function(user) {
+            if (user.username !== username) {
+                const li = document.createElement('li');
+                li.className = 'list-group-item list-group-item-action';
+                li.textContent = user.username + (user.status === 'CONNECTED' ? ' (online)' : ' (offline)');
+                li.onclick = function() {
+                    selectedRecipient = user.username;
+                    document.querySelectorAll('#user-list li').forEach(el => el.classList.remove('active'));
+                    li.classList.add('active');
+                    subscribeToRoom(selectedRecipient);
+                };
+                userList.appendChild(li);
+            }
+        });
+        if (!selectedRecipient && userList.firstChild) {
+            userList.firstChild.click();
+        }
+    }
+
+    function connect() {
+        const socket = new SockJS('/chat?username=' + encodeURIComponent(username));
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function (frame) {
+            setConnected(true);
+            stompClient.subscribe('/topic/users', function (message) {
+                updateUserList(JSON.parse(message.body));
+            });
+        }, function(error) {
+            setConnected(false);
+            console.error('STOMP error:', error);
+        });
+    }
+
+    document.getElementById('chat-form').addEventListener('submit', sendMessage);
+    window.onload = function() {
+        // Fetch initial user list
+        fetch('/api/users')
+            .then(response => response.json())
+            .then(users => updateUserList(users));
+        connect();
+    };
+</script>
+</html>
