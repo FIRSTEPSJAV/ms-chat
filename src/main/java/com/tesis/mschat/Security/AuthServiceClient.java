@@ -13,7 +13,7 @@ public class AuthServiceClient {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthServiceClient.class);
 
-    private String authServiceUrl = "http://localhost:8080/api/ms-auth/auth";
+    private String authServiceUrl = "http://192.168.0.135/api/ms-auth/auth";
 
     private final RestTemplate restTemplate = new RestTemplate();
 
