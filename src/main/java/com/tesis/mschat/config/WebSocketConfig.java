@@ -16,7 +16,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/chat")
+        registry.addEndpoint("/api/ms-chat/chat")
                 .addInterceptors(new UserHandshakeInterceptor())
                 .setAllowedOrigins("http://192.168.0.135")
                 .setHandshakeHandler(new CustomHandshakeHandler())
