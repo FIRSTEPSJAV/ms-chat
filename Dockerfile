@@ -1,5 +1,5 @@
 # Use una imagen base que tenga Java instalado
-FROM openjdk:17
+FROM eclipse-temurin:17-jdk
 
 # Copia el código fuente de la aplicación a la imagen
 COPY . /app
