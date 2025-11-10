@@ -15,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Controller
+@RequestMapping("/api/ms-chat")
 public class ChatController {
 
     private final SimpMessagingTemplate messagingTemplate;
