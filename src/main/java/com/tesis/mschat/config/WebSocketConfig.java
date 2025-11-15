@@ -18,7 +18,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/api/ms-chat/chat")
                 .addInterceptors(new UserHandshakeInterceptor())
-                .setAllowedOrigins("http://192.168.0.135", "https://firstepscol.com")
+                .setAllowedOrigins("https://firstepscol.com")
                 .setHandshakeHandler(new CustomHandshakeHandler())
                 .withSockJS();
     }
