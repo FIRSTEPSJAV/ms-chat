@@ -11,13 +11,13 @@ metadata:
     nginx.ingress.kubernetes.io/websocket-services: "ms-chat"
 
 spec:
-   ingressClassName: nginx
+   ingressClassName: public
   #  tls:
   #      - hosts:
   #         - marshando.dynaco.co
   #        secretName: marshando.dynaco.co
    rules:
-   - host: firstepscol.com
+   - host:
      http:
        paths:
        - path: /api/ms-chat
