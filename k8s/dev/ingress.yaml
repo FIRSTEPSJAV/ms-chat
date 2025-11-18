@@ -8,7 +8,7 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-send-timeout: "36000"
     nginx.ingress.kubernetes.io/websocket-services: "ms-chat"
 spec:
-  ingressClassName: public
+  ingressClassName: nginx
   rules:
     - host:
       http:
