@@ -22,7 +22,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                     "https://firstepscol.com",
                     "https://www.firstepscol.com",
                     "http://localhost:4200",  // Para desarrollo
-                    "http://localhost:8080"   // Para desarrollo
+                    "http://localhost:8080",
+                    "http://localhost:4204"   // Para desarrollo
                 )
                 .setHandshakeHandler(new CustomHandshakeHandler())
                 .withSockJS();
