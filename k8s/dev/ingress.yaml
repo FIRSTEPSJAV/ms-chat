@@ -19,6 +19,7 @@ metadata:
     nginx.ingress.kubernetes.io/cors-allow-origin: "https://firstepscol.com"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "*"
+    nginx.ingress.kubernetes.io/use-regex: "true"
 
 spec:
   ingressClassName: public
@@ -26,7 +27,18 @@ spec:
     - host: 
       http:
         paths:
-          - path: /api/ms-chat
+          - path: /api/ms-chat(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: ms-chat
+                port:
+                  number: 8086
+
+    - host:
+      http:
+        paths:
+          - path: /api/ms-chat(/|$)(.*)
             pathType: Prefix
             backend:
               service:
