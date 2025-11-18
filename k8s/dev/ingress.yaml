@@ -6,24 +6,26 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "36000"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "36000"
-    nginx.ingress.kubernetes.io/websocket-services: "ms-chat"
+    nginx.ingress.kubernetes.io/upgrade: "websocket"
+    nginx.ingress.kubernetes.io/connection: "upgrade"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
 spec:
-  ingressClassName: nginx
+  ingressClassName: public
   rules:
-    - host:
-      http:
-        paths:
-          - path: /api/ms-chat/chat
-            pathType: Prefix
-            backend:
-              service:
-                name: ms-chat
-                port:
-                  number: 8086
-          - path: /api/ms-chat
-            pathType: Prefix
-            backend:
-              service:
-                name: ms-chat
-                port:
-                  number: 8086
+  - host: firstepscol.com
+    http:
+      paths:
+      - path: /api/ms-chat/chat
+        pathType: Prefix
+        backend:
+          service:
+            name: ms-chat
+            port:
+              number: 8086
+      - path: /api/ms-chat
+        pathType: Prefix
+        backend:
+          service:
+            name: ms-chat
+            port:
+              number: 8086
