@@ -10,7 +10,7 @@ metadata:
 spec:
   ingressClassName: public
   rules:
-    - host: firstepscol.com
+    - host: 
       http:
         paths:
           - path: /api/ms-chat
